@@ -37,8 +37,8 @@ class MainActivity : AppCompatActivity() {
 
         webView.webViewClient = WebViewClient()
 
-        // Loads local bundled UI directly for instant offline launch
-        webView.loadUrl("file:///android_asset/index.html")
+        // Loads the live cloud-connected Telegram Manager UI
+        webView.loadUrl("https://stop-carlos-valuable-undefined.trycloudflare.com")
     }
 
     override fun onBackPressed() {
