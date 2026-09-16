@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#229ED9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <title>TG Multi-Account Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Lock Screen Overlay */
+    #lock-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, #172642 0%, #080c14 90%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .lock-card {
+      background: rgba(20, 27, 45, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+    }
+
+    .lock-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(34, 158, 217, 0.15);
+      border: 1px solid rgba(34, 158, 217, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+
+    .lock-icon svg {
+      width: 30px;
+      height: 30px;
+      fill: var(--primary);
+    }
+
+    .pin-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 14px;
+      color: #fff;
+      font-size: 20px;
+      text-align: center;
+      letter-spacing: 8px;
+      margin: 18px 0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .pin-input:focus {
+      border-color: var(--primary);
+    }
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: #141b2d;
+      --card-border: rgba(255, 255, 255, 0.07);
+      --primary: #229ED9;
+      --primary-glow: rgba(34, 158, 217, 0.35);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #152238 0%, var(--bg-dark) 85%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 12px 14px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    /* PWA Install Banner */
+    #install-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(34, 158, 217, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+      border: 1px solid rgba(34, 158, 217, 0.4);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    #install-banner .banner-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #install-banner svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--primary);
+      flex-shrink: 0;
+    }
+
+    #install-banner strong {
+      font-size: 14px;
+      display: block;
+      color: #fff;
+    }
+
+    #install-banner small {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* App Header */
+    header {
+      margin-bottom: 18px;
+      text-align: center;
+      padding-top: 6px;
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 158, 217, 0.12);
+      border: 1px solid rgba(34, 158, 217, 0.25);
+      padding: 5px 14px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .brand-tag svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--primary);
+    }
+
+    .brand-tag span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Batch Toolbar */
+    .batch-bar {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .batch-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .batch-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 11px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #229ED9 0%, #1783b9 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--success-glow);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+
+    .btn-danger-outline {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 8px;
+    }
+
+    /* Top actions */
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Account Card */
+    .account-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .account-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #229ED9, #6366f1);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #229ED9 0%, #4f46e5 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(34, 158, 217, 0.35);
+      flex-shrink: 0;
+    }
+
+    .user-details h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    .user-details .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-online {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      letter-spacing: 0.5px;
+    }
+
+    .dot-pulsing {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Stats Grid */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Controls List */
+    .controls-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .control-info span {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .control-info small {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Banner */
+    .status-banner {
+      background: rgba(34, 158, 217, 0.08);
+      border: 1px solid rgba(34, 158, 217, 0.2);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-banner.running {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .card-actions .btn {
+      flex: 1;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      background: var(--card-bg);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+    }
+
+    .empty-state svg {
+      width: 56px;
+      height: 56px;
+      fill: #475569;
+      margin-bottom: 14px;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .empty-state p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #172133;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 11px 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+
+    .alert {
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Xavfsizlik va Avto-Ulanish Parol Oynasi -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div class="lock-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+      </div>
+      <h2 style="font-size: 18px; margin-bottom: 6px;">Xavfsizlik Paroli</h2>
+      <p style="font-size: 12px; color: var(--text-muted);">Akkauntlarga avtomatik ulanish uchun shaxsiy parolingizni kiriting</p>
+      
+      <input type="password" id="appPinInput" class="pin-input" placeholder="••••" maxlength="16" autofocus onkeydown="if(event.key==='Enter')checkAppPin()">
+      
+      <div id="lockError" style="color: var(--danger); font-size: 12px; margin-bottom: 12px; display: none;">Parol noto'g'ri kiritildi!</div>
+      
+      <button class="btn btn-primary" style="width: 100%;" onclick="checkAppPin()">
+        🔓 Kirish va Avto-Ulanish
+      </button>
+      
+      <div style="margin-top: 14px;">
+        <label style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="rememberSession" checked> Shu qurilmada avto-ochilish
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    
+    <!-- PWA Installation Banner for Android -->
+    <div id="install-banner">
+      <div class="banner-text">
+        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <div>
+          <strong>Ilovani Telefonga O'rnatish</strong>
+          <small>To'g'ridan-to'g'ri Android ekranga alohida ilova bo'lib tushadi</small>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-install" onclick="installPWA()">O'rnatish</button>
+    </div>
+
+    <!-- App Header -->
+    <header>
+      <div class="brand-tag">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+        </svg>
+        <span>Ko'p Akkauntli Boshqaruvchi</span>
+      </div>
+      <h1>TG Multi-Account Manager</h1>
+      <p class="subtitle">Barcha akkauntlaringizni kuzatish, xabarlarni o'qish va 24/7 online qilish</p>
+    </header>
+
+    <!-- Top Action bar -->
+    <div class="top-actions">
+      <div class="section-title">
+        <span>Akkauntlar Ro'yxati</span>
+        <span id="account-counter" style="color: var(--primary); font-size: 13px;">(0 ta)</span>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openLoginModal()">
+        <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Yangi Akkaunt Qo'shish
+      </button>
+    </div>
+
+    <!-- Batch operations for all connected accounts -->
+    <div class="batch-bar" id="batch-bar" style="display: none;">
+      <span class="batch-label">Barcha Akkauntlar:</span>
+      <div class="batch-buttons">
+        <button class="btn btn-outline btn-sm" onclick="batchToggleOnline(true)">
+          🟢 Barchasi Online
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="batchReadAll()">
+          ⚡ Barchasida O'qish
+        </button>
+      </div>
+    </div>
+
+    <!-- Accounts List Container -->
+    <div id="accounts-container">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <h3>Hozircha ulangan akkaunt yo'q</h3>
+        <p>1-chi, 2-chi yoki 3-chi Telegram akkauntingizni qo'shing. Barchasini bir joyda kuzatishingiz mumkin.</p>
+        <button class="btn btn-primary" onclick="openLoginModal()">Akkaunt Qo'shish</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Dialog: Connect Telegram -->
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Yangi Akkaunt Qo'shish</h2>
+        <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+      </div>
+
+      <div class="alert alert-error" id="modalError"></div>
+      <div class="alert alert-success" id="modalSuccess"></div>
+
+      <!-- Step 1: Input Phone -->
+      <div id="step-phone">
+        <div class="form-group">
+          <label>Telefon Raqam (mamlakat kodi bilan)</label>
+          <input type="text" id="phoneInput" placeholder="+998901234567" inputmode="tel">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <small style="color: var(--text-muted); display:block; font-size:11px;">
+            Tasdiqlash kodi rasmiy Telegram ilovangizga xabar shaklida keladi.
+          </small>
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" id="btnSendCode" onclick="handleSendCode()">
+          Kodni Olish
+        </button>
+      </div>
+
+      <!-- Step 2: Input Code & 2FA -->
+      <div id="step-code" style="display: none;">
+        <div class="form-group">
+          <label>Telegram'ga Kelgan Kod</label>
+          <input type="text" id="codeInput" placeholder="Masalan: 12345" inputmode="numeric">
+        </div>
+        <div class="form-group" id="groupPassword" style="display: none;">
+          <label>2FA Ikki Bosqichli Parol</label>
+          <input type="password" id="passwordInput" placeholder="Telegram parolingiz">
+        </div>
+        <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" id="btnVerifyCode" onclick="handleVerifyCode()">
+          Akkauntni Ulash
+        </button>
+        <button class="btn btn-sm" style="width: 100%; background: none; color: var(--text-muted);" onclick="resetModalToPhone()">
+          Orqaga qaytish
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeAccounts = [];
+    let deferredPrompt = null;
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW error:', err));
+    }
+
+    // Capture PWA install event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').style.display = 'flex';
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          document.getElementById('install-banner').style.display = 'none';
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    async function loadAccounts() {
+      try {
+        const res = await fetch('/api/accounts');
+        const data = await res.json();
+        if (data.success) {
+          activeAccounts = data.accounts;
+          renderAccounts();
+        }
+      } catch (err) {
+        console.error("Yuklashda xatolik:", err);
+      }
+    }
+
+    function renderAccounts() {
+      const container = document.getElementById('accounts-container');
+      const counter = document.getElementById('account-counter');
+      const batchBar = document.getElementById('batch-bar');
+
+      counter.innerText = `(${activeAccounts.length} ta)`;
+      if (activeAccounts.length > 1) {
+        batchBar.style.display = 'flex';
+      } else {
+        batchBar.style.display = 'none';
+      }
+
+      if (activeAccounts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <h3>Hozircha ulangan akkaunt yo'q</h3>
+            <p>1-chi, 2-chi yoki 3-chi Telegram akkauntingizni qo'shing. Barchasini bir joyda kuzatishingiz mumkin.</p>
+            <button class="btn btn-primary" onclick="openLoginModal()">Akkaunt Qo'shish</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = activeAccounts.map((acc, index) => {
+        const initial = (acc.name && acc.name[0]) ? acc.name[0].toUpperCase() : 'T';
+        const isOnline = acc.always_online;
+        const isAutoRead = acc.auto_read_incoming;
+        const isReadingNow = acc.is_reading_now;
+
+        return `
+          <div class="account-card">
+            <div class="card-header">
+              <div class="user-profile">
+                <div class="avatar">${initial}</div>
+                <div class="user-details">
+                  <h3><span style="color: var(--primary); font-size: 13px;">#${index + 1}</span> ${escapeHtml(acc.name)}</h3>
+                  <div class="meta">${escapeHtml(acc.phone)} • @${escapeHtml(acc.username)}</div>
+                </div>
+              </div>
+              <div class="badge-online">
+                <div class="dot-pulsing" style="${isOnline ? '' : 'background: #64748b; animation: none;'}"></div>
+                <span>${isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+              <div class="stat-box">
+                <div class="stat-label">O'qilgan Xabarlar</div>
+                <div class="stat-value" style="color: #38bdf8;">${acc.messages_read_count || 0}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Holat</div>
+                <div class="stat-value" style="color: #34d399; font-size: 13px;">${escapeHtml(acc.last_online_ping || 'Faol')}</div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-grid">
+              <div class="control-item">
+                <div class="control-info">
+                  <span>Doimiy Online (24/7)</span>
+                  <small>Har 2 daqiqada Telegram serveriga faollik yuboradi</small>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" ${isOnline ? 'checked' : ''} onchange="toggleOnline('${acc.phone}', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="control-item">
+                <div class="control-info">
+                  <span>Yangi Xabarlarni Zumda O'qish</span>
+                  <small>Har qanday yangi xabar kelishi bilan o'qiladi</small>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" ${isAutoRead ? 'checked' : ''} onchange="toggleAutoRead('${acc.phone}', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Reading Progress -->
+            <div class="status-banner ${isReadingNow ? 'running' : ''}">
+              <svg style="width: 16px; height: 16px; fill: currentColor; flex-shrink: 0;" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+              </svg>
+              <div>${escapeHtml(acc.reading_progress || 'Kutish holatida')}</div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="card-actions">
+              <button class="btn btn-primary btn-sm" onclick="startReadAll('${acc.phone}')" ${isReadingNow ? 'disabled style="opacity:0.6;"' : ''}>
+                ${isReadingNow ? '⏳ O\'qilmoqda...' : '⚡ Barcha Chatlarni O\'qish'}
+              </button>
+              <button class="btn btn-danger-outline btn-sm" onclick="logoutAccount('${acc.phone}')">
+                O'chirish
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Actions
+    async function toggleOnline(phone, enabled) {
+      await fetch('/api/toggle_online', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone, enabled })
+      });
+      loadAccounts();
+    }
+
+    async function toggleAutoRead(phone, enabled) {
+      await fetch('/api/toggle_auto_read', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone, enabled })
+      });
+      loadAccounts();
+    }
+
+    async function startReadAll(phone) {
+      const res = await fetch('/api/start_read_all', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone })
+      });
+      const data = await res.json();
+      if (!data.success) alert(data.error);
+      loadAccounts();
+    }
+
+    async function batchToggleOnline(enabled) {
+      await fetch('/api/batch_toggle_online', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ enabled })
+      });
+      loadAccounts();
+    }
+
+    async function batchReadAll() {
+      await fetch('/api/batch_read_all', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+      });
+      loadAccounts();
+    }
+
+    async function logoutAccount(phone) {
+      if (!confirm("Akkauntni tizimdan o'chirishni xohlaysizmi?")) return;
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone })
+      });
+      loadAccounts();
+    }
+
+    // Modal
+    function openLoginModal() {
+      document.getElementById('loginModal').classList.add('active');
+      resetModalToPhone();
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.remove('active');
+    }
+
+    function resetModalToPhone() {
+      document.getElementById('step-phone').style.display = 'block';
+      document.getElementById('step-code').style.display = 'none';
+      document.getElementById('groupPassword').style.display = 'none';
+      hideAlerts();
+    }
+
+    function showAlert(text, isError) {
+      const err = document.getElementById('modalError');
+      const succ = document.getElementById('modalSuccess');
+      if (isError) {
+        err.innerText = text;
+        err.style.display = 'block';
+        succ.style.display = 'none';
+      } else {
+        succ.innerText = text;
+        succ.style.display = 'block';
+        err.style.display = 'none';
+      }
+    }
+
+    function hideAlerts() {
+      document.getElementById('modalError').style.display = 'none';
+      document.getElementById('modalSuccess').style.display = 'none';
+    }
+
+    async function handleSendCode() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (!phone) {
+        showAlert("Iltimos, telefon raqamingizni kiriting!", true);
+        return;
+      }
+
+      const btn = document.getElementById('btnSendCode');
+      btn.innerText = "Yuborilmoqda...";
+      btn.disabled = true;
+      hideAlerts();
+
+      try {
+        const res = await fetch('/api/send_code', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(data.message, false);
+          document.getElementById('step-phone').style.display = 'none';
+          document.getElementById('step-code').style.display = 'block';
+        } else {
+          showAlert(data.error || "Xatolik yuz berdi", true);
+        }
+      } catch (err) {
+        showAlert("Ulanish xatosi", true);
+      } finally {
+        btn.innerText = "Kodni Olish";
+        btn.disabled = false;
+      }
+    }
+
+    async function handleVerifyCode() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      const code = document.getElementById('codeInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+
+      if (!code) {
+        showAlert("Tasdiqlash kodini kiriting!", true);
+        return;
+      }
+
+      const btn = document.getElementById('btnVerifyCode');
+      btn.innerText = "Ulanmoqda...";
+      btn.disabled = true;
+      hideAlerts();
+
+      try {
+        const res = await fetch('/api/verify_code', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ phone, code, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(data.message, false);
+          setTimeout(() => {
+            closeLoginModal();
+            loadAccounts();
+          }, 1000);
+        } else {
+          if (data.need_password) {
+            document.getElementById('groupPassword').style.display = 'block';
+            showAlert(data.message || data.error, true);
+          } else {
+            showAlert(data.error || "Xatolik", true);
+          }
+        }
+      } catch (err) {
+        showAlert("Server xatosi", true);
+      } finally {
+        btn.innerText = "Akkauntni Ulash";
+        btn.disabled = false;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // PIN & Lock Screen Logic
+    function initSecurity() {
+      const savedPin = localStorage.getItem('app_user_pin');
+      const isRemembered = localStorage.getItem('remember_device') === 'true';
+
+      if (isRemembered && savedPin) {
+        document.getElementById('lock-screen').style.display = 'none';
+        loadAccounts();
+        setInterval(loadAccounts, 3000);
+      } else {
+        document.getElementById('lock-screen').style.display = 'flex';
+        setTimeout(() => document.getElementById('appPinInput').focus(), 200);
+      }
+    }
+
+    function checkAppPin() {
+      const input = document.getElementById('appPinInput').value.trim();
+      const savedPin = localStorage.getItem('app_user_pin');
+      const remember = document.getElementById('rememberSession').checked;
+      const errorDiv = document.getElementById('lockError');
+
+      if (!input) {
+        errorDiv.innerText = "Iltimos, parolni kiriting!";
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      if (!savedPin) {
+        // Birinchi marta kiritilganda parol o'rnatiladi
+        localStorage.setItem('app_user_pin', input);
+      } else if (savedPin !== input) {
+        errorDiv.innerText = "Parol noto'g'ri kiritildi!";
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      if (remember) {
+        localStorage.setItem('remember_device', 'true');
+      } else {
+        localStorage.removeItem('remember_device');
+      }
+
+      // Parol to'g'ri bo'lsa darhol akkauntlar yuklanadi va avto-ulanadi
+      document.getElementById('lock-screen').style.display = 'none';
+      loadAccounts();
+      setInterval(loadAccounts, 3000);
+    }
+
+    // Launch security check on load
+    initSecurity();
+  </script>
+</body>
+</html>
