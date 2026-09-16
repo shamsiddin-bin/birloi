@@ -37,8 +37,8 @@ class MainActivity : AppCompatActivity() {
 
         webView.webViewClient = WebViewClient()
 
-        // Loads the live cloud-connected Telegram Manager UI
-        webView.loadUrl("https://stop-carlos-valuable-undefined.trycloudflare.com")
+        // Loads the permanent 24/7 cloud server
+        webView.loadUrl("https://tg-manager-server.onrender.com/")
     }
 
     override fun onBackPressed() {
